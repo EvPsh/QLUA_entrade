@@ -44,6 +44,51 @@
 
 --]]
 
-function main()
+nFile = ""              -- название создаваемого файла (по имени инструмента)
+scName = ""             -- название запускаемого скрипта
 
+function OnInit()
+	    --инициализация
+    scName = string.match(debug.getinfo(1).short_src, "\\([^\\]+)%.lua$") -- получение имени запущенного скрипта
+    nFile = getScriptPath() .. "\\" .. scName .. ".csv"
+end
+
+function OnStop() -- действия при остановке скрипта
+    -- if t_id ~= nil then
+    --     DestroyTable(t_id)
+    -- end
+    is_run = false
+end
+
+function main()
+    CreateTable() -- создаём таблицу
+    SetTableNotificationCallback(t_id, f_cb) -- добавляем callback обработки
+
+    while is_run do
+        for i, _ in pairs(tInstr) do
+            ds[i] = {}
+            ds[i] = getNumCandles(tInstr[i][2])
+            -- переделать через DataSource
+
+                -- msg(ds[i] .. " количество свечей: " .. tInstr[i][2] .. ": i = " .. i) -- для проверки получения данных
+
+            if ds[i] == 0 or ds[i] == nil then
+                -- i = nil -- если tag не поставлен, убираем элемент массива
+                msg("Не получено данных с графика.\nили нет метки " .. tostring(tInstr[i][2]) .. "\nГрафик инструмента " .. tostring(tInstr[i][1]) .. "\nОстановка")
+                OnStop()
+                return -- это для прерывания цикла на текущем моменте, а не в конце.
+            end
+            pse(SlTime)
+            --[[
+                msg(Classcode)
+                msg(tInstr[i][1])
+                msg(tInstr[i][3])
+                msg (ds[i])
+                msg("i = " .. i)
+            --]]
+        end
+
+        if (IsWindowClosed(t_id)) then OnStop()
+        end
+    end
 end
