@@ -44,6 +44,71 @@
 
 --]]
 
+--[[
+local pairs = pairs
+local type = type
+
+module(...)
+
+--- —оздать копию массива (таблицы)
+-- @return копию массива (таблицы)
+function copy(array)
+    local copy_array = {}
+    if type(array) ~= "table" then
+        return array
+    end
+    for k, v in pairs(array) do
+        if type(v) == "table" then
+            copy_array[k] = copy(v)
+        else
+            copy_array[k] = v
+        end
+    end
+    return copy_array
+end
+
+--- ”знать, начинаетс€ ли индексаци€ в массиве с нул€ или с единицы.
+-- @return 0 или 1
+function base(array)
+    if array[0] ~= nil then
+        return 0
+    else
+        return 1
+    end
+end
+
+--- ¬ычислить число элементов в массиве.
+-- @return число элементов в массиве
+function size(array)
+    local n = 0
+    for _, _ in pairs(array) do
+        n = n + 1
+    end
+    return n
+end
+
+--- ѕроверить пустой или нет массив.
+-- @return true/false
+function isEmpty(array)
+    for _, _ in pairs(array) do
+        return false
+    end
+    return true
+end
+
+--- ѕолучить первый индекс массива, где ничего не записано. ѕоиск начинаетс€ с 1.
+-- @return первый индекс массива, где ничего не записано
+function firstEmptyIndex(array)
+    local i = 1
+    while array[i] ~= nil do
+        i = i + 1
+    end
+    return i
+end
+
+--]]
+
+
 nFile = ""              -- название создаваемого файла (по имени инструмента)
 scName = ""             -- название запускаемого скрипта
 
