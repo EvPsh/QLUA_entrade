@@ -62,7 +62,7 @@ function GetSeccode(str)
 -- возвращаем string sec_code
 --- 
 
-str = "CNY-3.23"
+str = "CNY-3.23 [price]" -- с помощью gsub отрезать слово [price]
 local txt = "securities"
 	local n = getNumberOf(txt)
 		msg("n = " .. tostring(n)) -- todo
