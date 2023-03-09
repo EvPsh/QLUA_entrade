@@ -10,13 +10,14 @@ CLIENT_CODE = "QLUA_EnterTP"
 
 Is_run = true
 
-Tprofit = 10		-- Take Profit в шагах цены
-P_offset = 3 		-- отступ от тэйк-профита, шагах цены
+Tprofit = 5		-- Take Profit в шагах цены
+P_offset = 2 		-- отступ от тэйк-профита, шагах цены
 P_spread = 0		-- защитный спрэд в TP, в шагах цены
 Lot = 0
 
 function main()
-	local price_step = removeZero(tonumber(getParamEx(CLASS_CODE, SEC_CODE, "SEC_PRICE_STEP").param_value))
+	local price_step, _ = GetParameters(CLASS_CODE, SEC_CODE)
+    
 		msg("price_step = " .. tostring(price_step)) -- todo	
 			msg("GetPosition " .. tostring(GetPosition(SEC_CODE))) -- todo
 			
@@ -41,6 +42,17 @@ end
 function OnStop()
 	msg("Остановлен") -- todo
 	Is_run = false
+end
+
+function GetParameters(classcode, seccode)
+    local price_step = removeZero(getParamEx(classcode, seccode, "SEC_PRICE_STEP").param_value)
+    local openprice = nil
+    -- получаем наличие инструмента в портфеле
+    -- определяем цену входа
+    -- определяем направление входа
+    -- определяем количество лотов входа
+
+    return price_step, openprice -- openprice - цена открытия сделки по инструменту
 end
 
 -- function OnTrade(trades)
@@ -293,7 +305,7 @@ function GetPosition(seccode) -- to do
 
 
 			return orders.totalnet	-- Количество лотов 
-	   else return 0 -- позиций по инструменту нет.
+       else return 0 -- позиций по инструменту нет.
 		end
 	end
 end
