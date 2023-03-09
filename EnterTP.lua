@@ -1,9 +1,11 @@
 -- Параметры ------------------------------------------------------------------------------------
 
-SEC_CODE = "NAH3" 
+SEC_CODE = "CRH3" 
 CLASS_CODE = "SPBFUT"
 ACCOUNT = "SPBFUT00479" 
 CLIENT_CODE = "QLUA_EnterTP"
+
+IdGraf = "NLAB"
 
 
 ----------------------- Настройки переменных ---------------------
@@ -20,7 +22,18 @@ function main()
     
 		msg("price_step = " .. tostring(price_step)) -- todo	
 			msg("GetPosition " .. tostring(GetPosition(SEC_CODE))) -- todo
-			
+	
+	local lastbar = getNumCandles(IdGraf)
+	local t, n, l = getCandlesByIndex(IdGraf, 0, lastbar - 1, 1)
+		-- for k, v in pairs(t[0]) do
+		-- 	msg("k =  " .. tostring(k) .. " / v = " .. tostring(v)) -- todo
+		-- end		
+
+		local seccode = GetSeccode(l)
+
+
+		msg("Graf " .. tostring(n) .. " / " .. tostring(l)) -- todo
+		
 	while Is_run do
 		local price, Lot = getEntryPrice(SEC_CODE) -- GetLot(CLASS_CODE, SEC_CODE)
 					-- msg("Lot = " .. tostring(Lot)) -- todo
@@ -40,11 +53,50 @@ function main()
 end
 
 function OnStop()
-	msg("Остановлен") -- todo
+	-- msg("Остановлен") -- todo
 	Is_run = false
 end
 
-function GetParameters(classcode, seccode)
+function GetSeccode(str)
+-- Получаем sec_code по легенде графика
+-- возвращаем string sec_code
+--- 
+
+str = "CNY-3.23"
+local txt = "securities"
+	local n = getNumberOf(txt)
+		msg("n = " .. tostring(n)) -- todo
+	
+
+	local function fn( ... )
+			-- body
+	end
+
+	for i = 0, n - 1 do
+		local sec_code = getItem(txt, i)
+			-- msg("sec_code " .. tostring(sec_code)) -- todo
+				-- for k, v in pairs(sec_code) do
+				-- 	message("K = " .. tostring(k) .." / v = ".. tostring(v)) -- todo
+				-- end
+					-- msg("sec " .. tostring(sec_code)) -- todo
+
+				
+
+		if sec_code.short_name == str then -- убрать в названии графика цены слово [price] с помощью gsub
+
+				msg("!!!!sec = " .. tostring(sec_code.sec_code)) -- todo
+					-- for k, v in pairs(sec_code) do
+					-- 	message("K = " .. tostring(k) .." / v = ".. tostring(v)) -- todo
+					-- end
+					
+			return sec_code.sec_code
+		end
+	end
+
+	
+end
+
+function GetParameters(classcode, seccode) -- todo
     local price_step = removeZero(getParamEx(classcode, seccode, "SEC_PRICE_STEP").param_value)
     local openprice = nil
     -- получаем наличие инструмента в портфеле
