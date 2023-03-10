@@ -111,6 +111,12 @@ function GetParameters(idgraf)
 				-- for k, v in pairs(data) do
 				-- 	message("K = " .. tostring(k) .." / v = ".. tostring(v)) -- todo
 				-- end
+
+				-- data.class_code ->		classcode
+				-- data.sec_code -> 		seccode
+				-- t[0] ->					OHLCVT (.open, .close, .high, .volume, . datetime --{})
+				-- data.min_price_step -> 	price_step
+				
 			return data.class_code, data.sec_code, t[0], removeZero(data.min_price_step)
 			-- break
 		end
