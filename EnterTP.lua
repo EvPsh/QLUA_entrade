@@ -1066,3 +1066,30 @@ https://quik2dde.ru/viewtopic.php?id=149
 -- function to_human_time(time)
 --     return tostring(string.format("%02d", time.hour) .. ":" .. string.format("%02d", time.min) .. ":" .. string.format("%02d", time.sec))
 -- end
+
+
+
+--[[
+-- Индикатор:
+-- Перемещение линии через настройки индикатора. Хоть мышкой двигать нельзя, но можно задать точный уровень цены, что удобнее стандартной линии.
+-- Значение линии можно считывать в своём скрипте.
+Settings = {
+  Name = 'HLine',
+  Value = 0,
+  line = {
+    {
+      Name = 'HLine',
+      Type = TYPE_LINE,
+      Width = 2
+    }
+  }
+}
+
+function Init()
+  return 1
+end
+
+function OnCalculate(index)
+  return Settings.Value
+end
+--]]
