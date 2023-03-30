@@ -1,3 +1,19 @@
+-- Скрпипт мониторит окно графика с меткой IdGraf,
+-- если находит изменение позиции, то выставляет к ней TakeProfit с параметрами P_offset и P_spread.
+-- снимаем данные с графика (sec_code, class_code, min_price_step)
+-- ищем текущую позицию, направление и цену входа в позицию
+-- выставляем к ней TakeProfit
+---
+
+-- берем параметры с графика idgraf
+-- проверяем позиция = 0, иначе - остановка
+-- следим за callback OnTrade. проходит интересующая нас сделка (seccode  - выставляем tp, InPosition = true
+-- 		если прошла сделка с интересующим нас seccode, проверяем InPosition (если true, то 
+-- 		проверяем текущее количество лотов по инструменту, если уменьшилось, то ничего не делаем,
+--		если увеличилось - выставляем tp к лотам на разницу, 
+--		если равно нулю, то InPosition = false и всё повторяется по-новой
+---
+
 -- Параметры ------------------------------------------------------------------------------------
 
 -- SEC_CODE = "" 
@@ -125,12 +141,18 @@ function GetParameters(idgraf)
 end
 
 
--- function OnTrade(trades)
--- 	if (trades.class_code == CLASS_CODE and trades.sec_code == SEC_CODE and trades.brokerref == CLIENT_CODE) then
--- 		Lot = trades.qty
--- 			msg("Lot = " .. tostring(Lot)) -- todo
--- 	end
--- end
+function OnTrade(trades) -- todo
+	if (trades.class_code == CLASS_CODE and trades.sec_code == SEC_CODE and trades.brokerref == CLIENT_CODE) then
+		Lot = trades.qty
+
+			for k, v in pairs(trades) do -- todo
+				message("K = " .. tostring(k) .." / v = ".. tostring(v)) -- todo
+			end
+			
+		msg("Lot = " .. tostring(Lot)) -- todo
+		return tonumber(Lot) -- вот здесь lot, entryPrice, direction
+	end
+end
 
 function GetLot(classcode, seccode)
 	for i = 0, getNumberOf("all_trades") - 1, 1 do
@@ -313,16 +335,16 @@ end
 
 function removeZero(str)
 -- удаление точки и нулей после нее
+-- возвращает string
 ---
-	while (string.sub(str,-1) == "0" and str ~= "0") do
+	while (string.sub(str, -1) == "0" and str ~= "0") do
 		str = string.sub(str, 1, -2)
 	end
-	if (string.sub(str,-1) == ".") then
+	if (string.sub(str, -1) == ".") then
 		str = string.sub(str, 1, -2)
 	end
 	return str
 end
-
 
 ---[[
 -- https://quikluacsharp.ru/quik-qlua/poluchenie-dannyh-iz-tablits-quik-v-qlua-lua/
@@ -333,10 +355,9 @@ function GetPosition(seccode) -- to do
 		local orders = getItem("FUTURES_CLIENT_HOLDING", i)  
 		if orders.sec_code == seccode and orders.totalnet ~= 0 then
 			
-		-- 	for k, v in pairs(orders) do
-				-- msg("" .. tostring(k) .. " / " .. tostring(v)) -- todo
-		-- 	end
-
+			for k, v in pairs(orders) do -- todo
+				msg("GetPosition:\n" .. tostring(k) .. " / " .. tostring(v)) -- todo
+			end
 
 			return orders.totalnet	-- Количество лотов 
 		 else return 0 -- позиций по инструменту нет.
@@ -470,7 +491,7 @@ function SLTPorder(account, classcode, seccode, buySell, qty, tprice, slprice, p
 		stprice = slprice + prof_spread
 	else
 		TGsend(scName .. ". Неверно указано направление ордера TakeProfit & StopLoss. Остановка")
-		is_run = false
+		Is_run = false
 	end
 
 	local trans_id = "100"
