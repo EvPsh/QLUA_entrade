@@ -58,7 +58,6 @@ end
 --     end
 -- end
 
-
 function OnStop() -- действия при остановке скрипта
     is_run = false
     if t_id ~= nil then DestroyTable(t_id) end
@@ -101,110 +100,117 @@ function main()
                 msg("i = " .. i)
             --]]
 
-            Expansion(Classcode, tInstr[i][2], ds[i], dimPat)
+            Expansion(tInstr[i][2], ds[i])
         end
 
-        if (IsWindowClosed(t_id)) then OnStop() 
+        if (IsWindowClosed(t_id)) then OnStop()
         end
     end
 end
 
-function Expansion(classcode, tinstr, size, cbars)
-    -- classcode - пока не используется. На будущее - для выставления заявки
+function Expansion(tinstr, size)
     -- tinstr - метка графика
     -- size - количество полученных свечей
     -- cbars - количествой свечей для отбора
     --- 
 
-    local t = nil 		-- таблица, содержащая запрашиваемые свечки, 
-    local l = nil 		-- легенда графика
-    
-    t, _, l = getCandlesByIndex(tinstr, 0, size - cbars, cbars)
-    	-- msg("n = " .. n)
-    -- size - cbars - № свечи с которого смотреть (слева-направо),
-    -- cbars - количество свечей, которые необходимо на просмотр
-    
-    -- t, n, l = ....
-    -- t – таблица, содержащая запрашиваемые свечки,
-    -- n – количество свечек в таблице t,
-    -- l – легенда (подпись) графика.
-	
-	local m = getLinesCount(tinstr)		-- получаем количество линий с графика
-    if m ~= 1 then
-        msg("Количество линий на графике = " .. l .. " (" .. tinstr ..")" .. " цены <> 1")
-        OnStop()
-        return
-    end
-
-        -- msg ("size - cbars " .. size .. "/" .. cbars)
-        -- for i, _ in pairs(t) do
-        --     msg(t[i].high .. " = t[i].high, i = " .. i)
-        -- end
-
-    local n = getNumCandles(tinstr)
-	 	-- msg("n = " .. n .. " / Size = ".. size) -- для проверки
-
-    if n > size then -- вот здесь проверка на изменение количества свечей
-        -- если количество свечей увеличилось, то кидаем на отсмотр
-        local x = 1
-        for i = cbars - 1, 0, -1 do 		-- массив от 0 до 2. 3 бар (слева -> направо) = 1 бару (справа -> налево)
-            Bars.O[x] = t[i].open 			-- Получить значение Open для указанной свечи (цена открытия свечи)
-                -- msg("test t[i].open " .. t[i].open)
-                -- msg("test Bars.O[i] " .. Bars.O[x] .. " x = " .. x)
-
-            Bars.H[x] = t[i].high 			-- Получить значение High для указанной свечи (наибольшая цена свечи)
-            Bars.L[x] = t[i].low 			-- Получить значение Low для указанной свечи (наименьшая цена свечи)
-            Bars.C[x] = t[i].close 			-- Получить значение Close для указанной свечи (цена закрытия свечи)
-            Bars.V[x] = t[i].volume 		-- Получить значение Volume для указанной свечи (объем сделок в свече)
-            Bars.T[x] = t[i].datetime 		-- Получить значение datetime для указанной свечи
-            								-- Где i - индекс свечи от 0 до n-1
-            x = x + 1
-        end
-        x = x - 1 -- возврат к значению up массива
-	        --[[
-	            for k = 1, #Bars.O do -- для проверки
-	                msg("k = " .. k .. " #Bars = " .. #Bars.H)
-	                msg("Bars.O[i] " .. k .. "/" .. tostring(Bars.O[k]))
-	                msg("Bars.H[i] " .. k .. "/"  .. tostring(Bars.H[k]))
-	                msg("Bars.L[i] " .. k .. "/"  .. tostring(Bars.L[k]))
-	                msg("Bars.C[i] " .. k .. "/"  .. tostring(Bars.C[k]))
-	            end
-	        --]]
-
-        local sTime = tostring(os.time(Bars.T[1])) -- было без tostring
-        local datetime = os.date("!*t", sTime)
-
-        sTime = StrText(datetime.hour + CorrTime) .. StrText(datetime.min) .. StrText(datetime.sec) -- возвращаем время в виде HHMMSS
-        local date = StrText(datetime.year) .. StrText(datetime.month) .. StrText(datetime.day) -- возвращаем дату в виде YYYYMMDD
-
-        -- для вставки значений в таблицу
-        local tableTime = StrText(datetime.hour + CorrTime) .. ":" .. StrText(datetime.min) .. ":" .. StrText(datetime.sec) -- возвращаем время в виде HH:MM:SS
-        local tableDate = StrText(datetime.year) .. "-" .. StrText(datetime.month) .. "-" .. StrText(datetime.day) -- возвращаем дату в виде YYYY-MM-DD
-        
-            --[[ -- проверочные данные
-                -- msg("sTime " .. sTime)
-                -- msg("date " .. date)
-
-                -- for i, _ in pairs(tinstr) do
-                --     msg(Bars.O[i] .." ++++ " .. i) -- для проверки, не удалять, иначе потом непонятно будет
-                -- end
-            --]]
-
-        local res1, res2, res3 = Pattern(Bars, Mfunc) --res1 - сигнал графика, res2 - nil, res3 - nil на развитие
-        if res1 ~= nil then
-            --local lab_id = insLabel(tinstr, res1, res2, date, sTime, Bars.O[x]) -- lab_id - идентификатор метки на графике, для удаления с графика
-               -- msg("tInstr " .. res1) -- todo
-           
-            local lab_id = insLabel(tinstr, res1, res2, date, sTime, Bars.O[1]) -- lab_id - идентификатор метки на графике, для удаления с графика
-            -- https://forum.quik.ru/forum10/topic118/
-
-            local nstr = PutIn(t_id, tinstr, getTimeFrame(Bars), res1, tableDate, tableTime, "Сигнал", lab_id, res2)
-            lightAllTable(t_id, res2, tonumber(nstr))
-            --msg("Получен сигнал: " .. res1 .. ".\nГрафик: " .. tinstr)
-            WriteToFile(nFile, t_id)
-        end
-    end
 end
+-- function Expansion(tinstr, size)
+--     -- classcode - пока не используется. На будущее - для выставления заявки
+--     -- tinstr - метка графика
+--     -- size - количество полученных свечей
+--     -- cbars - количествой свечей для отбора
+--     --- 
+
+--     local t = nil 		-- таблица, содержащая запрашиваемые свечки, 
+--     local l = nil 		-- легенда графика
+--     local cbars = 3     -- получаем из паттерна
+    
+--     t, _, l = getCandlesByIndex(tinstr, 0, size - cbars, cbars)
+--     	-- msg("n = " .. n)
+--     -- size - cbars - № свечи с которого смотреть (слева-направо),
+--     -- cbars - количество свечей, которые необходимо на просмотр
+--     -- t, n, l = ....
+--     -- t – таблица, содержащая запрашиваемые свечки,
+--     -- n – количество свечек в таблице t,
+--     -- l – легенда (подпись) графика.
+
+-- 	local m = getLinesCount(tinstr)		-- получаем количество линий с графика
+--     if m ~= 1 then
+--         msg("Количество линий на графике = " .. l .. " (" .. tinstr ..")" .. " цены <> 1")
+--         OnStop()
+--         return
+--     end
+
+--         -- msg ("size - cbars " .. size .. "/" .. cbars)
+--         -- for i, _ in pairs(t) do
+--         --     msg(t[i].high .. " = t[i].high, i = " .. i)
+--         -- end
+
+--     local n = getNumCandles(tinstr)
+-- 	 	-- msg("n = " .. n .. " / Size = ".. size) -- для проверки
+
+--     if n > size then -- вот здесь проверка на изменение количества свечей
+--         -- если количество свечей увеличилось, то кидаем на отсмотр
+--         local x = 1
+--         for i = cbars - 1, 0, -1 do 		-- массив от 0 до 2. 3 бар (слева -> направо) = 1 бару (справа -> налево)
+--             Bars.O[x] = t[i].open 			-- Получить значение Open для указанной свечи (цена открытия свечи)
+--                 -- msg("test t[i].open " .. t[i].open)
+--                 -- msg("test Bars.O[i] " .. Bars.O[x] .. " x = " .. x)
+
+--             Bars.H[x] = t[i].high 			-- Получить значение High для указанной свечи (наибольшая цена свечи)
+--             Bars.L[x] = t[i].low 			-- Получить значение Low для указанной свечи (наименьшая цена свечи)
+--             Bars.C[x] = t[i].close 			-- Получить значение Close для указанной свечи (цена закрытия свечи)
+--             Bars.V[x] = t[i].volume 		-- Получить значение Volume для указанной свечи (объем сделок в свече)
+--             Bars.T[x] = t[i].datetime 		-- Получить значение datetime для указанной свечи
+--             								-- Где i - индекс свечи от 0 до n-1
+--             x = x + 1
+--         end
+--         x = x - 1 -- возврат к значению up массива
+-- 	        --[[
+-- 	            for k = 1, #Bars.O do -- для проверки
+-- 	                msg("k = " .. k .. " #Bars = " .. #Bars.H)
+-- 	                msg("Bars.O[i] " .. k .. "/" .. tostring(Bars.O[k]))
+-- 	                msg("Bars.H[i] " .. k .. "/"  .. tostring(Bars.H[k]))
+-- 	                msg("Bars.L[i] " .. k .. "/"  .. tostring(Bars.L[k]))
+-- 	                msg("Bars.C[i] " .. k .. "/"  .. tostring(Bars.C[k]))
+-- 	            end
+-- 	        --]]
+
+--         local sTime = tostring(os.time(Bars.T[1])) -- было без tostring
+--         local datetime = os.date("!*t", sTime)
+
+--         sTime = StrText(datetime.hour + CorrTime) .. StrText(datetime.min) .. StrText(datetime.sec) -- возвращаем время в виде HHMMSS
+--         local date = StrText(datetime.year) .. StrText(datetime.month) .. StrText(datetime.day) -- возвращаем дату в виде YYYYMMDD
+
+--         -- для вставки значений в таблицу
+--         local tableTime = StrText(datetime.hour + CorrTime) .. ":" .. StrText(datetime.min) .. ":" .. StrText(datetime.sec) -- возвращаем время в виде HH:MM:SS
+--         local tableDate = StrText(datetime.year) .. "-" .. StrText(datetime.month) .. "-" .. StrText(datetime.day) -- возвращаем дату в виде YYYY-MM-DD
+        
+--             --[[ -- проверочные данные
+--                 -- msg("sTime " .. sTime)
+--                 -- msg("date " .. date)
+
+--                 -- for i, _ in pairs(tinstr) do
+--                 --     msg(Bars.O[i] .." ++++ " .. i) -- для проверки, не удалять, иначе потом непонятно будет
+--                 -- end
+--             --]]
+
+--         local res1, res2, res3 = Pattern(Bars, Mfunc) --res1 - сигнал графика, res2 - nil, res3 - nil на развитие
+--         if res1 ~= nil then
+--             --local lab_id = insLabel(tinstr, res1, res2, date, sTime, Bars.O[x]) -- lab_id - идентификатор метки на графике, для удаления с графика
+--                -- msg("tInstr " .. res1) -- todo
+           
+--             local lab_id = insLabel(tinstr, res1, res2, date, sTime, Bars.O[1]) -- lab_id - идентификатор метки на графике, для удаления с графика
+--             -- https://forum.quik.ru/forum10/topic118/
+
+--             local nstr = PutIn(t_id, tinstr, getTimeFrame(Bars), res1, tableDate, tableTime, "Сигнал", lab_id, res2)
+--             lightAllTable(t_id, res2, tonumber(nstr))
+--             --msg("Получен сигнал: " .. res1 .. ".\nГрафик: " .. tinstr)
+--             WriteToFile(nFile, t_id)
+--         end
+--     end
+-- end
 
 -- dopfunc.lua --
 
